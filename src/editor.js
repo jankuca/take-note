@@ -174,6 +174,7 @@ takeNote.Editor.prototype.getXML = function (prettyprint) {
 };
 
 /**
+ * Toggles an inline type
  * @param {string} key
  */
 takeNote.Editor.prototype.setInlineType = function (key) {
@@ -200,8 +201,14 @@ takeNote.Editor.prototype.setInlineType = function (key) {
 takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 	var type = takeNote.Types[key];
 
+	var cont = range.getContainer();
+
 	if (!range.isCollapsed()) {
-		var contents = range.getBrowserRangeObject().cloneContents();
+		var contents = cont;
+		if (cont.tagName !== goog.dom.TagName.UL
+			&& cont.tagName !== goog.dom.TagName.LI) {
+			contents = range.getBrowserRangeObject().cloneContents();
+		}
 		var olds = goog.dom.getElementsByTagNameAndClass(
 			type.tagName, type.className, contents);
 		var i = olds.length;
@@ -209,13 +216,15 @@ takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 		if (i !== 0) {
 			var old, child;
 			while (old = olds[--i]) {
-				var o = old.childNodes.length;
-				while (child = old.childNodes[--o]) {
-					old.insertBefore(child, old);
+				while (child = old.firstChild) {
+					(old.parentNode || contents).insertBefore(child, old);
 				}
 				goog.dom.removeNode(old);
 			}
-			range.replaceContentsWithNode(contents);
+
+			if (cont !== contents) {
+				range.replaceContentsWithNode(contents);
+			}
 		} else {
 			var type_node = this.createInlineTypeNode_(type);
 			try {
@@ -234,7 +243,6 @@ takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 				var iterator = range.__iterator__();
 				var node, r;
 				
-				var cont = range.getContainer();
 				if (cont.tagName === goog.dom.TagName.UL) {
 					
 				}
@@ -280,6 +288,7 @@ takeNote.Editor.prototype.createInlineTypeNode_ = function (type) {
 };
 
 /**
+ * Toggles a block type
  * @param {string} key
  */
 takeNote.Editor.prototype.setBlockType = function (key) {
@@ -305,6 +314,7 @@ takeNote.Editor.prototype.setBlockType = function (key) {
 };
 
 /**
+ * Activates/deactivates the editor
  * @param {boolean} active
  */
 takeNote.Editor.prototype.setActive = function (active) {
