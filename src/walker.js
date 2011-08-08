@@ -60,11 +60,11 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 			// Text, inline and block childs are not explicitly separated in raw data structures.
 			// The boundary is reached when a child node is of a block type.
 			child_list = node.childNodes;
-			var child;
 			for (var i = 0, ii = child_list.length; i < ii; ++i) {
-				child = child_list[i];
+				var child = child_list[i];
+				var key = child.tagName.toLowerCase();
 				if (child.nodeType === child.CDATA_SECTION_NODE
-					|| takeNote.Types[child.tagName.toLowerCase()].inline) {
+					|| key === 'null' || takeNote.Types[key].inline) {
 					this.handleInlineNode(child);
 
 				} else {
@@ -80,19 +80,23 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 
 takeNote.Walker.prototype.handleInlineNode = function (node) {
 	if (node.nodeType === node.ELEMENT_NODE) {
-		var data;
-		if (this.visual) {
-			data = {
-				type: this.getInlineType(node)
-			};
+		if (node.tagName.toLowerCase() !== 'null') {
+			var data;
+			if (this.visual) {
+				data = {
+					type: this.getInlineType(node)
+				};
+			} else {
+				data = {
+					type: node.tagName.toLowerCase()
+				};
+			}
+			this.oninlinestart(data);
+			Array.prototype.forEach.call(node.childNodes, this.handleInlineNode, this);
+			this.oninlineend(data);
 		} else {
-			data = {
-				type: node.tagName.toLowerCase()
-			};
+			Array.prototype.forEach.call(node.childNodes, this.handleInlineNode, this);
 		}
-		this.oninlinestart(data);
-		Array.prototype.forEach.call(node.childNodes, this.handleInlineNode, this);
-		this.oninlineend(data);
 
 	} else if (node.nodeType === node.TEXT_NODE
 		|| node.nodeType === node.CDATA_SECTION_NODE) {
