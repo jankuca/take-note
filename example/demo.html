@@ -52,13 +52,23 @@ body {
 #area li > * {
 	margin: 0;
 }
-#area li > :before {
+#area li > *:first-child:before {
 	content: '';
 }
 
 code {
 	font-family: Consolas, monospace;
 	font-size: 12px;
+}
+
+#area li[data-list="dash"] > *:first-child:before {
+	content: '[-] ';
+}
+#area li[data-list="arrow"] > *:first-child:before {
+	content: '[->] ';
+}
+#area li[data-list="fat-arrow"] > *:first-child:before {
+	content: '[=>] ';
 }
 	</style>
 

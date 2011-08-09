@@ -33,6 +33,12 @@ goog.addDependency('', [
  */
 takeNote.DEFAULT_BLOCK_TYPE = 'paragraph';
 
+takeNote.ListTypes = [
+	[ 'dash', /^-\s/ ],
+	[ 'arrow', /^->\s/ ],
+	[ 'fat-arrow', /^=>\s/ ]
+];
+
 /**
  * @constructor
  * @param {Element} area The editing area
@@ -314,6 +320,32 @@ takeNote.Editor.prototype.setBlockType = function (key) {
 };
 
 /**
+ * Toggles a list type of the current block
+ * @param {string} key
+ * @param {boolean=} dont_overwrite Whether the operation should not
+ *   be performed when the current block already has a list type set
+ * @param {boolean=} rm_prefix Whether the prefix (e.g. '-> ') should be trimmed
+ */
+takeNote.Editor.prototype.setListType = function (key, dont_overwrite, rm_prefix) {
+	var block = this.getCurrentBlock_();
+	var current_type = goog.dom.dataset.get(block, 'list');
+	if (!dont_overwrite || !current_type) {
+		goog.dom.dataset.set(block, 'list', key);
+
+		if (rm_prefix) {
+			var cnt = block.firstChild;
+			var node = cnt.firstChild;
+			while (node && node.nodeType !== node.TEXT_NODE) {
+				node = node.firstChild;
+			}
+			if (node) {
+				node.data = node.data.replace(/^\W+\s/, '');
+			}
+		}
+	}
+};
+
+/**
  * Activates/deactivates the editor
  * @param {boolean} active
  */
@@ -344,8 +376,11 @@ takeNote.Editor.prototype.erase = function () {
  * Inserts a new block after the active one
  * @param {string=} key Type key of the new block.
  *   Defaults to the currently active type or its "next" setting.
+ * @param {boolean=} dont_move_caret Whether the caret should be moved
+ *   into the newly created block
+ * @return {Node} The newly created block
  */
-takeNote.Editor.prototype.addBlock = function (key) {
+takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 	key = key || this.getNextBlockTypeKey_();
 	var type = takeNote.Types[key];
 
@@ -369,7 +404,11 @@ takeNote.Editor.prototype.addBlock = function (key) {
 		goog.dom.appendChild(this.area_, block);
 	}
 	// Set the caret
-	goog.dom.Range.createCaret(cnt, 0).select();
+	if (!dont_move_caret) {
+		goog.dom.Range.createCaret(cnt, 0).select();
+	}
+
+	return block;
 };
 
 /**
@@ -557,6 +596,24 @@ takeNote.Editor.prototype.onKeyUp_ = function (e) {
 		case goog.events.KeyCodes.DELETE:
 			this.removeAppleSpans_();
 			break;
+		default:
+			if (e.keyCode > 48) {
+				this.processCurrentBlock_();
+			}
+	}
+};
+
+/**
+ * Scans contents of the current block and performs operations
+ *   if specific rules match
+ */
+takeNote.Editor.prototype.processCurrentBlock_ = function () {
+	var block = this.getCurrentBlock_();
+	var text = goog.dom.getTextContent(block);
+	for (var i = 0, type; type = takeNote.ListTypes[i]; ++i) {
+		if (type[1].test(text)) {
+			this.setListType(type[0], true, true);
+		}
 	}
 };
 
