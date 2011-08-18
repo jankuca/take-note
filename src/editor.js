@@ -591,6 +591,7 @@ takeNote.Editor.prototype.onKeyDown_ = function (e) {
  * @param {goog.events.Event} e
  */
 takeNote.Editor.prototype.onKeyUp_ = function (e) {
+	this.fixArea_();
 	switch (e.keyCode) {
 		case goog.events.KeyCodes.BACKSPACE:
 		case goog.events.KeyCodes.DELETE:
@@ -613,6 +614,28 @@ takeNote.Editor.prototype.processCurrentBlock_ = function () {
 	for (var i = 0, type; type = takeNote.ListTypes[i]; ++i) {
 		if (type[1].test(text)) {
 			this.setListType(type[0], true, true);
+		}
+	}
+};
+
+/**
+ * Fixes the editing area
+ */
+takeNote.Editor.prototype.fixArea_ = function () {
+	var area = this.area_;
+	if (!area.lastChild || area.lastChild.nodeType !== area.ELEMENT_NODE) {
+		var cnt = /** @type {!Element} */ this.addBlock('paragraph').firstChild;
+		for (var i = 0; area.firstChild
+			&& area.firstChild.nodeType !== area.ELEMENT_NODE; ++i) {
+			goog.dom.insertChildAt(cnt, area.firstChild, i);
+		}
+		if (i) {
+			goog.dom.Range.createCaret(cnt, i).select();
+		}
+	} else {
+		var last_block = /** @type {!Element} */ area.lastChild;
+		if (goog.dom.dataset.get(last_block, 'type') !== 'paragraph') {
+			this.addBlock('paragraph', true);
 		}
 	}
 };
