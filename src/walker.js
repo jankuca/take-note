@@ -62,7 +62,7 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 			child_list = node.childNodes;
 			for (var i = 0, ii = child_list.length; i < ii; ++i) {
 				var child = child_list[i];
-				var key = child.tagName.toLowerCase();
+				var key = child.tagName ? child.tagName.toLowerCase() : 'null';
 				if (child.nodeType === child.CDATA_SECTION_NODE
 					|| key === 'null' || takeNote.Types[key].inline) {
 					this.handleInlineNode(child);
