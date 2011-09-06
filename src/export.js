@@ -12,6 +12,7 @@ goog.exportProperty(takeNote.Editor.prototype, 'getXML', takeNote.Editor.prototy
 
 goog.exportProperty(takeNote.Editor.prototype, 'setInlineType', takeNote.Editor.prototype.setInlineType);
 goog.exportProperty(takeNote.Editor.prototype, 'setBlockType', takeNote.Editor.prototype.setBlockType);
+goog.exportProperty(takeNote.Editor.prototype, 'setListType', takeNote.Editor.prototype.setListType);
 
 goog.exportProperty(takeNote.Editor.prototype, 'indentCurrentBlock', takeNote.Editor.prototype.indentCurrentBlock);
 goog.exportProperty(takeNote.Editor.prototype, 'outdentCurrentBlock', takeNote.Editor.prototype.outdentCurrentBlock);
