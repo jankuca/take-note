@@ -323,7 +323,7 @@ takeNote.Editor.prototype.setBlockType = function (key) {
 
 /**
  * Toggles a list type of the current block
- * @param {string} key
+ * @param {?string} key
  * @param {boolean=} dont_overwrite Whether the operation should not
  *   be performed when the current block already has a list type set
  */
@@ -331,7 +331,11 @@ takeNote.Editor.prototype.setListType = function (key, dont_overwrite) {
 	var block = this.getCurrentBlock_();
 	var current_type = goog.dom.dataset.get(block, 'list');
 	if (!dont_overwrite || !current_type) {
-		goog.dom.dataset.set(block, 'list', key);
+		if (key === null) {
+			goog.dom.dataset.remove(block, 'list');
+		} else {
+			goog.dom.dataset.set(block, 'list', key);
+		}
 		block.className += 'a';
 	}
 };
@@ -515,7 +519,7 @@ takeNote.Editor.prototype.getCurrentBlock_ = function () {
 	}
 
 	return this.getBlockFromRange_(range);
-}
+};
 
 takeNote.Editor.prototype.getBlockFromRange_ = function (range) {
 	var cont = range.getContainer();
@@ -568,14 +572,26 @@ takeNote.Editor.prototype.onKeyDown_ = function (e) {
 				this.indentCurrentBlock();
 			}
 			break;
+		case goog.events.KeyCodes.BACKSPACE:
+			var block = this.getCurrentBlock_();
+			var range = goog.dom.Range.createFromWindow();
+			if (range.isCollapsed() && range.getStartNode().parentNode === block.firstChild) {
+				var prev = goog.dom.dataset.get(block, 'list');
+				if (prev) {
+					this.setListType(null);
+					e.preventDefault();
+				}
+			}
 		case goog.events.KeyCodes.UP:
 			if ((e.ctrlKey && e.metaKey) || (e.ctrlKey && e.shiftKey)) {
 				this.moveBlockUp();
+				e.preventDefault();
 			}
 			break;
 		case goog.events.KeyCodes.DOWN:
 			if ((e.ctrlKey && e.metaKey) || (e.ctrlKey && e.shiftKey)) {
 				this.moveBlockDown();
+				e.preventDefault();
 			}
 			break;
 	}
