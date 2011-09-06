@@ -569,12 +569,12 @@ takeNote.Editor.prototype.onKeyDown_ = function (e) {
 			}
 			break;
 		case goog.events.KeyCodes.UP:
-			if (e.ctrlKey && e.shiftKey) {
+			if ((e.ctrlKey && e.metaKey) || (e.ctrlKey && e.shiftKey)) {
 				this.moveBlockUp();
 			}
 			break;
 		case goog.events.KeyCodes.DOWN:
-			if (e.ctrlKey && e.shiftKey) {
+			if ((e.ctrlKey && e.metaKey) || (e.ctrlKey && e.shiftKey)) {
 				this.moveBlockDown();
 			}
 			break;
