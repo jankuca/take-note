@@ -72,7 +72,9 @@ takeNote.Editor.prototype.getArea = function () {
  * Takes an XML string and loads its contents into the editor area
  * @param {string} xml The XML string to load
  */
-takeNote.Editor.prototype.load = function (xml) {
+takeNote.Editor.prototype.load = function (xml, document) {
+	document = document || window.document;
+
 	var doc = this.getDocumentFromXML(xml);
 	var walker = new takeNote.Walker(doc.firstChild, false);
 	var area = document.createDocumentFragment();
@@ -81,13 +83,13 @@ takeNote.Editor.prototype.load = function (xml) {
 	var open_list = area;
 	walker.onblockstart = function (block) {
 		var type = takeNote.Types[block.type];
-		var node = goog.dom.createDom('li');
+		var node = document.createElement('li');
 		goog.dom.dataset.set(node, 'type', block.type);
 		if (block.list) {
-			goog.dom.dataset.set(node, 'list', block.type);
+			goog.dom.dataset.set(node, 'list', block.list);
 		}
-		var cnt = goog.dom.createDom(type.tagName);
-		var child_list = goog.dom.createDom('ul');
+		var cnt = document.createElement(type.tagName);
+		var child_list = document.createElement('ul');
 		goog.dom.appendChild(node, cnt);
 		goog.dom.appendChild(node, child_list);
 		goog.dom.appendChild(open_list, node);
@@ -104,7 +106,7 @@ takeNote.Editor.prototype.load = function (xml) {
 	};
 	walker.oninlinestart = function (inline) {
 		var type = takeNote.Types[inline.type];
-		var node = goog.dom.createDom(type.tagName);
+		var node = document.createElement(type.tagName);
 		if (type.className) {
 			node.className = type.className;
 		}
