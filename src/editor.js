@@ -326,24 +326,13 @@ takeNote.Editor.prototype.setBlockType = function (key) {
  * @param {string} key
  * @param {boolean=} dont_overwrite Whether the operation should not
  *   be performed when the current block already has a list type set
- * @param {boolean=} rm_prefix Whether the prefix (e.g. '-> ') should be trimmed
  */
-takeNote.Editor.prototype.setListType = function (key, dont_overwrite, rm_prefix) {
+takeNote.Editor.prototype.setListType = function (key, dont_overwrite) {
 	var block = this.getCurrentBlock_();
 	var current_type = goog.dom.dataset.get(block, 'list');
 	if (!dont_overwrite || !current_type) {
 		goog.dom.dataset.set(block, 'list', key);
-
-		if (rm_prefix) {
-			var cnt = block.firstChild;
-			var node = cnt.firstChild;
-			while (node && node.nodeType !== node.TEXT_NODE) {
-				node = node.firstChild;
-			}
-			if (node) {
-				node.data = node.data.replace(/^\W+\s/, '');
-			}
-		}
+		block.className += 'a';
 	}
 };
 
