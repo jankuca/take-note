@@ -382,6 +382,10 @@ takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 
 	var current_block = this.getCurrentBlock_();
 	if (current_block) {
+		// Keep previous list type
+		goog.dom.dataset.set(block, 'list',
+			goog.dom.dataset.get(current_block, 'list'));
+
 		var current_cnt = current_block.firstChild;
 		if (current_cnt.lastChild) {
 			// Empty block
