@@ -384,7 +384,7 @@ takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 	if (current_block) {
 		// Keep previous list type
 		goog.dom.dataset.set(block, 'list',
-			goog.dom.dataset.get(current_block, 'list'));
+			goog.dom.dataset.get(current_block, 'list') || '');
 
 		var current_cnt = current_block.firstChild;
 		if (current_cnt.lastChild) {
@@ -608,7 +608,7 @@ takeNote.Editor.prototype.processCurrentBlock_ = function () {
 	var text = goog.dom.getTextContent(block);
 	for (var i = 0, type; type = takeNote.ListTypes[i]; ++i) {
 		if (type[1].test(text)) {
-			this.setListType(type[0], true, true);
+			this.setListType(type[0], true);
 		}
 	}
 };
