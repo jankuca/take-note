@@ -331,12 +331,14 @@ takeNote.Editor.prototype.setListType = function (key, dont_overwrite) {
 	var block = this.getCurrentBlock_();
 	var current_type = goog.dom.dataset.get(block, 'list');
 	if (!dont_overwrite || !current_type) {
+		var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 		if (key === null) {
 			goog.dom.dataset.remove(block, 'list');
 		} else {
 			goog.dom.dataset.set(block, 'list', key);
 		}
 		block.className += 'a';
+		saved.restore();
 	}
 };
 
