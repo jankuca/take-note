@@ -31,13 +31,8 @@ goog.addDependency('', [
  * @const
  * @type {string}
  */
-takeNote.DEFAULT_BLOCK_TYPE = 'paragraph';
+takeNote.DEFAULT_BLOCK_TYPE = 'text';
 
-takeNote.ListTypes = [
-	[ 'dash', /^-\s/ ],
-	[ 'arrow', /^->\s/ ],
-	[ 'fat-arrow', /^=>\s/ ]
-];
 
 /**
  * @constructor
@@ -71,18 +66,24 @@ takeNote.Editor.prototype.getArea = function () {
 /**
  * Takes an XML string and loads its contents into the editor area
  * @param {string} xml The XML string to load
+ * @param {Document=} document The document object to use to create elements
  */
 takeNote.Editor.prototype.load = function (xml, document) {
 	document = document || window.document;
 
-	var doc = this.getDocumentFromXML(xml);
-	var walker = new takeNote.Walker(doc.firstChild, false);
+	var walker = new takeNote.Walker(
+		this.getDocumentFromXML(xml).firstChild, false);
 	var area = document.createDocumentFragment();
 
 	var open_cnt = null;
 	var open_list = area;
 	walker.onblockstart = function (block) {
 		var type = takeNote.Types[block.type];
+		if (!type) {
+			// Ignore unknown block types
+			return false;
+		}
+
 		var node = document.createElement('li');
 		goog.dom.dataset.set(node, 'type', block.type);
 		if (block.list) {
@@ -106,6 +107,11 @@ takeNote.Editor.prototype.load = function (xml, document) {
 	};
 	walker.oninlinestart = function (inline) {
 		var type = takeNote.Types[inline.type];
+		if (!type) {
+			// Ignore inline block types
+			return false;
+		}
+
 		var node = document.createElement(type.tagName);
 		if (type.className) {
 			node.className = type.className;
@@ -523,6 +529,10 @@ takeNote.Editor.prototype.getCurrentBlock_ = function () {
 	return this.getBlockFromRange_(range);
 };
 
+takeNote.Editor.prototype.getCurrentBlocks_ = function () {
+	
+}
+
 takeNote.Editor.prototype.getBlockFromRange_ = function (range) {
 	var cont = range.getContainer();
 
@@ -610,24 +620,6 @@ takeNote.Editor.prototype.onKeyUp_ = function (e) {
 		case goog.events.KeyCodes.DELETE:
 			this.removeAppleSpans_();
 			break;
-		default:
-			if (e.keyCode > 48) {
-				this.processCurrentBlock_();
-			}
-	}
-};
-
-/**
- * Scans contents of the current block and performs operations
- *   if specific rules match
- */
-takeNote.Editor.prototype.processCurrentBlock_ = function () {
-	var block = this.getCurrentBlock_();
-	var text = goog.dom.getTextContent(block);
-	for (var i = 0, type; type = takeNote.ListTypes[i]; ++i) {
-		if (type[1].test(text)) {
-			this.setListType(type[0], true);
-		}
 	}
 };
 
@@ -637,7 +629,7 @@ takeNote.Editor.prototype.processCurrentBlock_ = function () {
 takeNote.Editor.prototype.fixArea_ = function () {
 	var area = this.area_;
 	if (!area.lastChild || area.lastChild.nodeType !== area.ELEMENT_NODE) {
-		var cnt = /** @type {!Element} */ this.addBlock('paragraph').firstChild;
+		var cnt = /** @type {!Element} */ this.addBlock(takeNote.DEFAULT_BLOCK_TYPE).firstChild;
 		for (var i = 0; area.firstChild
 			&& area.firstChild.nodeType !== area.ELEMENT_NODE; ++i) {
 			goog.dom.insertChildAt(cnt, area.firstChild, i);
@@ -647,8 +639,8 @@ takeNote.Editor.prototype.fixArea_ = function () {
 		}
 	} else {
 		var last_block = /** @type {!Element} */ area.lastChild;
-		if (goog.dom.dataset.get(last_block, 'type') !== 'paragraph') {
-			this.addBlock('paragraph', true);
+		if (goog.dom.dataset.get(last_block, 'type') !== takeNote.DEFAULT_BLOCK_TYPE) {
+			this.addBlock(takeNote.DEFAULT_BLOCK_TYPE, true);
 		}
 	}
 };
