@@ -46,7 +46,10 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 				list: node.getAttribute('list') || null
 			};
 		}
-		this.onblockstart(data);
+		var result = this.onblockstart(data);
+		if (result === false) {
+			return;
+		}
 
 		if (this.visual) {
 			var cnt = node.firstChild;
@@ -91,7 +94,10 @@ takeNote.Walker.prototype.handleInlineNode = function (node) {
 					type: node.tagName.toLowerCase()
 				};
 			}
-			this.oninlinestart(data);
+			var result = this.oninlinestart(data);
+			if (result === false) {
+				return;
+			}
 			Array.prototype.forEach.call(node.childNodes, this.handleInlineNode, this);
 			this.oninlineend(data);
 		} else {
