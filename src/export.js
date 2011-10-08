@@ -10,6 +10,9 @@ goog.exportProperty(takeNote.Editor.prototype, 'setActive', takeNote.Editor.prot
 goog.exportProperty(takeNote.Editor.prototype, 'load', takeNote.Editor.prototype.load);
 goog.exportProperty(takeNote.Editor.prototype, 'getXML', takeNote.Editor.prototype.getXML);
 
+goog.exportProperty(takeNote.Editor.prototype, 'addBlock', takeNote.Editor.prototype.addBlock);
+goog.exportProperty(takeNote.Editor.prototype, 'addStandaloneBlock', takeNote.Editor.prototype.addStandaloneBlock);
+
 goog.exportProperty(takeNote.Editor.prototype, 'setInlineType', takeNote.Editor.prototype.setInlineType);
 goog.exportProperty(takeNote.Editor.prototype, 'setBlockType', takeNote.Editor.prototype.setBlockType);
 goog.exportProperty(takeNote.Editor.prototype, 'setListType', takeNote.Editor.prototype.setListType);

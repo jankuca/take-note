@@ -2,6 +2,7 @@ goog.provide('takeNote.Walker');
 goog.provide('takeNote.XMLWalker');
 
 goog.require('goog.dom.dataset');
+goog.require('goog.dom.TagName');
 goog.require('takeNote.Types');
 
 
@@ -37,11 +38,15 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 
 		if (this.visual) {
 			data = {
+				node: node,
 				type: goog.dom.dataset.get(node, 'type'),
-				list: goog.dom.dataset.get(node, 'list') || null
+				list: goog.dom.dataset.get(node, 'list') || null,
+				ref: goog.dom.dataset.get(node, 'ref') || null,
+				plugin: goog.dom.dataset.get(node, 'plugin') || null
 			};
 		} else {
 			data = {
+				node: node,
 				type: node.tagName.toLowerCase(),
 				list: node.getAttribute('list') || null
 			};
@@ -54,11 +59,10 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 		if (this.visual) {
 			var cnt = node.firstChild;
 			Array.prototype.forEach.call(cnt.childNodes, this.handleInlineNode, this);
-			child_list = cnt.nextSibling;
-			if (child_list) {
+			child_list = node.lastChild;
+			if (child_list && child_list.tagName === goog.dom.TagName.UL) {
 				this.handleBlockNodes(child_list.childNodes);
 			}
-
 		} else {
 			// Text, inline and block childs are not explicitly separated in raw data structures.
 			// The boundary is reached when a child node is of a block type.
@@ -66,10 +70,11 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 			for (var i = 0, ii = child_list.length; i < ii; ++i) {
 				var child = child_list[i];
 				var key = child.tagName ? child.tagName.toLowerCase() : 'null';
-				if (child.nodeType === child.CDATA_SECTION_NODE
-					|| key === 'null' || takeNote.Types[key].inline) {
-					this.handleInlineNode(child);
-
+				if (child.nodeType === child.CDATA_SECTION_NODE) {
+					var type = takeNote.Types[key];
+					if (key === 'null' || type.inline) {
+						this.handleInlineNode(child);
+					}
 				} else {
 					this.handleBlockNodes(Array.prototype.slice.call(child_list, i - 1));
 					break;

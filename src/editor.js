@@ -52,7 +52,27 @@ takeNote.Editor = function (area) {
 	 * @type {string}
 	 * @protected
 	 */
-	this.blockTypeKey_ = takeNote.DEFAULT_BLOCK_TYPE;
+	this.block_type_key_ = takeNote.DEFAULT_BLOCK_TYPE;
+
+	/**
+	 * UID for plugin instances
+	 * Required for plugin matching when exporting the contents
+	 * @type {number}
+	 */
+	this.plugin_counter_ = 0;
+
+	/**
+	 * Plugins in use
+	 * @type {Array.<Object>}
+	 */
+	this.plugins_by_id_ = [];
+
+	/**
+	 * Map of plugin states
+	 * Updated when serializing the editor via getXML
+	 * @type {Array.<*>}
+	 */
+	this.plugin_states_ = [];
 };
 
 /**
@@ -89,7 +109,7 @@ takeNote.Editor.prototype.load = function (xml, document) {
 		if (block.list) {
 			goog.dom.dataset.set(node, 'list', block.list);
 		}
-		var cnt = document.createElement(type.tagName);
+		var cnt = goog.isFunction(type.toDOM) ? type.toDOM(block) : document.createElement(type.tagName);
 		var child_list = document.createElement('ul');
 		goog.dom.appendChild(node, cnt);
 		goog.dom.appendChild(node, child_list);
@@ -108,7 +128,7 @@ takeNote.Editor.prototype.load = function (xml, document) {
 	walker.oninlinestart = function (inline) {
 		var type = takeNote.Types[inline.type];
 		if (!type) {
-			// Ignore inline block types
+			// Ignore unknown inline types
 			return false;
 		}
 
@@ -151,40 +171,84 @@ takeNote.Editor.prototype.getDocumentFromXML = function (xml) {
 
 /**
  * Converts the area contents into XML and returns it
+ * @param {function(string)} callback The callback function to which to pass the XML
  * @param {boolean=} prettyprint Whether to print indentation and line breaks
- * @return {string} The XML
  */
-takeNote.Editor.prototype.getXML = function (prettyprint) {
-	var walker = new takeNote.Walker(this.area_, true);
-	var xml = '<?xml version="1.0" encoding="utf-8"?>';
-	xml += "\n" + '<root>';
-	var level = 1;
-	walker.onblockstart = function (block) {
-		xml += prettyprint ? "\n" + goog.string.repeat('  ', level) : '';
-		xml += '<' + block.type;
-		if (block.list) {
-			xml += ' list="' + block.list + '"';
+takeNote.Editor.prototype.getXML = function (callback, prettyprint) {
+	var self = this;
+
+	this.requestPluginStates_(function () {
+		var walker = new takeNote.Walker(self.area_, true);
+		var xml = '<?xml version="1.0" encoding="utf-8"?>';
+		xml += "\n" + '<root>';
+		var level = 1;
+		walker.onblockstart = function (block) {
+			var type = takeNote.Types[block.type];
+
+			var plugin_key = goog.dom.dataset.get(block.node, 'plugin');
+			if (plugin_key) {
+				block.plugin = takeNote.Plugins[plugin_key];
+			}
+			var plugin_id = goog.dom.dataset.get(block.node, 'plugin_id');
+			if (plugin_id) {
+				block.plugin_state = self.plugin_states_[Number(plugin_id)];
+			}
+
+			xml += prettyprint ? "\n" + goog.string.repeat('  ', level) : '';
+			if (type.toXML) {
+				xml += type.toXML(block) || '';
+			} else {
+				xml += '<' + block.type;
+				if (block.list) {
+					xml += ' list="' + block.list + '"';
+				}
+				xml += '>';
+			}
+			level += 1;
+		};
+		walker.ontext = function (text) {
+			xml += '<![CDATA[' + text + ']]>';
+		};
+		walker.oninlinestart = function (inline) {
+			xml += '<' + inline.type + '>';
+		};
+		walker.oninlineend = function (inline) {
+			xml += '</' + inline.type + '>';
+		};
+		walker.onblockend = function (block) {
+			level -= 1;
+			xml += '</' + block.type + '>';
+		};
+		walker.walk();
+		xml += prettyprint ? "\n" : '';
+		xml += '</root>' + "\n";
+
+		callback(xml);
+	});
+};
+
+takeNote.Editor.prototype.requestPluginStates_ = function (callback) {
+	var states = this.plugin_states_;
+	var plugins = this.plugins_by_id_;
+	var ii = plugins.length;
+	(function iter(i) {
+		if (i < ii) {
+			var plugin = plugins[i];
+			if (!plugin) {
+				iter(++i);
+			} else if (goog.isFunction(plugin['getState'])) {
+				states[i] = plugin['getState'](function (async_result) {
+					states[i] = async_result;
+					iter(++i);
+				});
+				if (states[i]) {
+					iter(++i)
+				}
+			}
+		} else {
+			callback();
 		}
-		xml += '>';
-		level += 1;
-	};
-	walker.ontext = function (text) {
-		xml += '<![CDATA[' + text + ']]>';
-	};
-	walker.oninlinestart = function (inline) {
-		xml += '<' + inline.type + '>';
-	};
-	walker.oninlineend = function (inline) {
-		xml += '</' + inline.type + '>';
-	};
-	walker.onblockend = function (block) {
-		level -= 1;
-		xml += '</' + block.type + '>';
-	};
-	walker.walk();
-	xml += prettyprint ? "\n" : '';
-	xml += '</root>' + "\n";
-	return xml;
+	}(0));
 };
 
 /**
@@ -203,8 +267,12 @@ takeNote.Editor.prototype.setInlineType = function (key) {
 		// Implies the selection being only in the editor area
 	}
 
+	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+
 	var range = /** @type {!goog.dom.AbstractRange} */ goog.dom.Range.createFromWindow();
 	this.applyInlineTypeToRange_(range, key);
+
+	saved.restore();
 };
 
 /**
@@ -323,7 +391,7 @@ takeNote.Editor.prototype.setBlockType = function (key) {
 	goog.dom.insertSiblingBefore(cnt, current_cnt);
 	goog.dom.removeNode(current_cnt);
 
-	this.blockTypeKey_ = key;
+	this.block_type_key_ = key;
 	saved.restore();
 };
 
@@ -372,7 +440,7 @@ takeNote.Editor.prototype.setActive = function (active) {
 takeNote.Editor.prototype.erase = function () {
 	this.area_.innerHTML = '';
 	this.blockTypeKey_ = takeNote.DEFAULT_BLOCK_TYPE;
-	this.addBlock(this.blockTypeKey_);
+	this.addBlock(this.block_type_key_);
 };
 
 /**
@@ -381,7 +449,7 @@ takeNote.Editor.prototype.erase = function () {
  *   Defaults to the currently active type or its "next" setting.
  * @param {boolean=} dont_move_caret Whether the caret should be moved
  *   into the newly created block
- * @return {Node} The newly created block
+ * @return {Element} The newly created block
  */
 takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 	key = key || this.getNextBlockTypeKey_();
@@ -415,6 +483,33 @@ takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 		goog.dom.Range.createCaret(cnt, 0).select();
 	}
 
+	return block;
+};
+
+/**
+ * Inserts a new "standalone" block after the active one
+ *   A standalone block is a block which is not editable.
+ *   It is intended to be used for third-party components.
+ * @param {string} key Type key of the new block.
+ *   Defaults to the currently active type or its "next" setting.
+ * @param {string=} plugin_key Plugin key to use
+ * @param {Object=} plugin Plugin object
+ * @return {Element} The newly created block
+ */
+takeNote.Editor.prototype.addStandaloneBlock = function (key, plugin_key, plugin) {
+	var block = this.addBlock(key, true);
+	block.setAttribute('contenteditable', false);
+	if (plugin_key) {
+		goog.dom.dataset.set(block, 'plugin', plugin_key);
+	}
+
+	if (plugin) {
+		var plugin_id = this.plugin_counter_++;
+		this.plugins_by_id_[plugin_id] = plugin;
+		goog.dom.dataset.set(block, 'plugin_id', String(plugin_id));
+	}
+
+	this.fixArea_();
 	return block;
 };
 
@@ -499,6 +594,7 @@ takeNote.Editor.prototype.getChildList_ = function (block) {
 	var list = block.lastChild;
 	if (list.tagName !== goog.dom.TagName.UL) {
 		list = goog.dom.createDom('ul');
+		list.setAttribute('contenteditable', true);
 		goog.dom.appendChild(block, list);
 	}
 	return /** @type {!Element} */ list;
@@ -508,11 +604,11 @@ takeNote.Editor.prototype.getChildList_ = function (block) {
  * @return {string}
  */
 takeNote.Editor.prototype.getNextBlockTypeKey_ = function () {
-	var type = takeNote.Types[this.blockTypeKey_];
+	var type = takeNote.Types[this.block_type_key_];
 	if (type.nextBlockType) {
 		return type.nextBlockType;
 	}
-	return this.blockTypeKey_;
+	return this.block_type_key_;
 };
 
 /**
@@ -594,6 +690,7 @@ takeNote.Editor.prototype.onKeyDown_ = function (e) {
 					e.preventDefault();
 				}
 			}
+			break;
 		case goog.events.KeyCodes.UP:
 			if ((e.ctrlKey && e.metaKey) || (e.ctrlKey && e.shiftKey)) {
 				this.moveBlockUp();
@@ -640,7 +737,8 @@ takeNote.Editor.prototype.fixArea_ = function () {
 	} else {
 		var last_block = /** @type {!Element} */ area.lastChild;
 		if (goog.dom.dataset.get(last_block, 'type') !== takeNote.DEFAULT_BLOCK_TYPE) {
-			this.addBlock(takeNote.DEFAULT_BLOCK_TYPE, true);
+			var block = this.addBlock(takeNote.DEFAULT_BLOCK_TYPE, true);
+			goog.dom.appendChild(area, block);
 		}
 	}
 };
