@@ -170,6 +170,17 @@ takeNote.Editor.prototype.getDocumentFromXML = function (xml) {
 };
 
 /**
+ * Converts an HTML string to a Document
+ * @param {string} html The HTML string to convert to a Document
+ * @return {Element}
+ */
+takeNote.Editor.prototype.getDocumentFromHTML = function (html) {
+    var container = document.createElement('div');
+    container.innerHTML = html;
+    return container;
+};
+
+/**
  * Converts the area contents into XML and returns it
  * @param {function(string)} callback The callback function to which to pass the XML
  * @param {boolean=} prettyprint Whether to print indentation and line breaks
