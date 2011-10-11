@@ -220,10 +220,6 @@ takeNote.paste.Types = (function () {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
 		},
-		'font': {
-			type: 'inline',
-			child_types: ['%inline%', '%text%']
-		},
 		'ins': {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
@@ -247,6 +243,14 @@ takeNote.paste.Types = (function () {
 		'wbr': {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
+		},
+		// Copy content + Attributes as style
+		'font': {
+			type: 'inline',
+			child_types: ['%inline%', '%text%'],
+			attrs_as_style: {
+				'color': 'color'
+			}
 		},
 
 		// Replace

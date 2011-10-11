@@ -176,6 +176,22 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	if (act_type.type === 'block') {
 		this.block.push(elem);
 	}
+
+	// Handling tags with attrs as inline styles
+	if ((act_type['attrs_as_style']) && (attrs)) {
+		for (var i = 0, ii = attrs.length; i < ii; i++) {
+			var attr_name = attrs[i][0];
+			var attr_value = attrs[i][1];
+			var act_style_name = act_type['attrs_as_style'][attr_name];
+
+			if ((act_style_name) && (takeNote.paste.Styles[act_style_name])) {
+				var result = takeNote.paste.Styles[act_style_name](attr_value);
+				if (result) {
+					this.openTag_(result[0], (result[1]) ? [result[1]] : []);
+				}
+			}
+		}
+	}
 	
 	// Handling inline styles
 	if (attrs) {
