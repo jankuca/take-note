@@ -27,6 +27,7 @@ takeNote.Plugins['drawing'] = function (data) {
 				var mime = data.match(/^data:([\w-\/]+);base64,(.*)/);
 				xml += ' type="' + mime[1] + '">';
 				xml += '<![CDATA[' + mime[2] + ']]>'
+				xml += '</layer>';
 			} else {
 				xml += ' />';
 			}
