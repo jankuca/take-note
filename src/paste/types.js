@@ -165,7 +165,7 @@ takeNote.paste.Types = (function () {
 			tag_name: 'text',
 			tag_attrs: {
 			type: function (parent) {
-					return ['type', (parent === 'ol') ? 'number' : 'arrow'];
+					return ['list', (parent === 'ol') ? 'number' : 'dash'];
 				}
 			},
 			type: 'list_item',
