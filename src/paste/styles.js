@@ -37,30 +37,15 @@ takeNote.paste.Styles = {
 
 	'background': function (value) {
 		var color = new takeNote.paste.RGBColor(value).toHex();
-		if ((color) && (takeNote.paste.Styles.allowed_colors_.indexOf(color) > 0)) {
+		if (color) {
 			return ['_highlight', ['color', color]];	
 		}
 	},
 
 	'color': function (value) {
 		var color = new takeNote.paste.RGBColor(value).toHex();
-		if ((color) && (takeNote.paste.Styles.allowed_colors_.indexOf(color) > 0)) {
+		if (color) {
 			return ['_font', ['color', color]];	
 		}
 	}
 }
-
-/**
- * @private
- * @const {Array.<string>}
- */
-takeNote.paste.Styles.allowed_colors_ = [
-	'#000000',
-	'#ff0000',
-	'#00ff00',
-	'#0000ff',
-	'#ffff00',
-	'#ff00ff',
-	'#00ffff',
-	'#ffffff'
-];
