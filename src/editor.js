@@ -267,15 +267,10 @@ takeNote.Editor.prototype.requestPluginStates_ = function (callback) {
  * @param {string} key
  */
 takeNote.Editor.prototype.setInlineType = function (key) {
-	try {
-		var block = this.getCurrentBlock_();
-		if (!block) {
-			// Implies the selection being outside the editor area
-			return;
-		}
-	} catch (err) {
-		// More than one block is selected.
-		// Implies the selection being only in the editor area
+	var blocks = this.getCurrentBlocks_();
+	if (!blocks.length) {
+		// Implies the selection being outside the editor area
+		return;
 	}
 
 	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
@@ -358,6 +353,7 @@ takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 				}
 
 				// node === range.getEndNode()
+				node = range.getEndNode();
 				r = /** @type {!goog.dom.AbstractRange} */ goog.dom.Range.createFromNodeContents(node);
 				r.getBrowserRangeObject().setEnd(node, range.getEndOffset());
 				this.applyInlineTypeToRange_(r, key);
@@ -387,20 +383,22 @@ takeNote.Editor.prototype.createInlineTypeNode_ = function (type) {
 takeNote.Editor.prototype.setBlockType = function (key) {
 	var type = takeNote.Types[key];
 
-	var block = this.getCurrentBlock_();
-	var current_cnt = block.firstChild;
-	var cnt = goog.dom.createDom(type.tagName, null);
-
 	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 
-	var range = goog.dom.Range
-		.createFromNodeContents(current_cnt)
-		.getBrowserRangeObject();
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
+		var current_cnt = block.firstChild;
+		var cnt = goog.dom.createDom(type.tagName, null);
 
-	goog.dom.dataset.set(block, 'type', key);
-	goog.dom.appendChild(cnt, range.extractContents());
-	goog.dom.insertSiblingBefore(cnt, current_cnt);
-	goog.dom.removeNode(current_cnt);
+		var range = goog.dom.Range
+			.createFromNodeContents(current_cnt)
+			.getBrowserRangeObject();
+
+		goog.dom.dataset.set(block, 'type', key);
+		goog.dom.append(cnt, current_cnt.childNodes);
+		goog.dom.insertSiblingBefore(cnt, current_cnt);
+		goog.dom.removeNode(current_cnt);
+	});
 
 	this.block_type_key_ = key;
 	saved.restore();
@@ -413,18 +411,23 @@ takeNote.Editor.prototype.setBlockType = function (key) {
  *   be performed when the current block already has a list type set
  */
 takeNote.Editor.prototype.setListType = function (key, dont_overwrite) {
-	var block = this.getCurrentBlock_();
-	var current_type = goog.dom.dataset.get(block, 'list');
-	if (!dont_overwrite || !current_type) {
-		var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
-		if (key === null) {
-			goog.dom.dataset.remove(block, 'list');
-		} else {
-			goog.dom.dataset.set(block, 'list', key);
+	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
+		var current_type = goog.dom.dataset.get(block, 'list');
+		if (!dont_overwrite || !current_type) {
+			if (key === null) {
+				goog.dom.dataset.remove(block, 'list');
+			} else {
+				goog.dom.dataset.set(block, 'list', key);
+			}
+			block.className += ' a';
+			block.className = '';
 		}
-		block.className += 'a';
-		saved.restore();
-	}
+	});
+
+	saved.restore();
 };
 
 /**
@@ -471,18 +474,21 @@ takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 	goog.dom.appendChild(block, cnt);
 	goog.dom.dataset.set(block, 'type', key);
 
-	var current_block = this.getCurrentBlock_();
+	var current_blocks = this.getCurrentBlocks_();
+	var current_block = current_blocks[0];
 	if (current_block) {
 		// Keep previous list type
 		goog.dom.dataset.set(block, 'list',
 			goog.dom.dataset.get(current_block, 'list') || '');
 
-		var current_cnt = current_block.firstChild;
-		if (current_cnt.lastChild) {
-			// Empty block
-			var range = goog.dom.Range.createFromWindow().getBrowserRangeObject();
-			range.setEnd(current_cnt.lastChild, current_cnt.lastChild.length);
-			goog.dom.appendChild(cnt, range.extractContents());
+		if (current_blocks.length > 1) {
+			var current_cnt = current_block.firstChild;
+			if (current_cnt.lastChild) {
+				// Empty block
+				var range = goog.dom.Range.createFromWindow().getBrowserRangeObject();
+				range.setEnd(current_cnt.lastChild, current_cnt.lastChild.length);
+				goog.dom.appendChild(cnt, range.extractContents());
+			}
 		}
 		goog.dom.insertSiblingAfter(block, current_block);
 	} else {
@@ -528,71 +534,79 @@ takeNote.Editor.prototype.addStandaloneBlock = function (key, plugin_key, plugin
  * Indents the current block
  */
 takeNote.Editor.prototype.indentCurrentBlock = function () {
-	var block = this.getCurrentBlock_();
-	if (block) {
+	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
 		var prev = /** @type {Element} */ block.previousSibling;
 		// Do not indent first-child items
 		if (!prev) {
 			return;
 		}
 
-		var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 		goog.dom.appendChild(this.getChildList_(prev), block);
-		saved.restore();
-	}
+	});
+
+	saved.restore();
 };
 
 /**
  * Outdents the current block
  */
 takeNote.Editor.prototype.outdentCurrentBlock = function () {
-	var block = this.getCurrentBlock_();
-	if (block) {
+	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
 		var parent = block.parentNode;
 		// Check for minimal indentation
 		if (parent === this.area_) {
 			return;
 		}
 
-		var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 		goog.dom.insertSiblingAfter(block, parent.parentNode);
-		saved.restore();
 
 		// Remove empty child list
 		if (parent.childNodes.length === 0) {
 			goog.dom.removeNode(parent);
 		}
-	}
+	});
+
+	saved.restore();
 };
 
 /**
  * Moves the current block up within its parent list
  */
 takeNote.Editor.prototype.moveBlockUp = function () {
-	var block = this.getCurrentBlock_();
-	if (block) {
+	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
 		var prev = block.previousSibling;
 		if (prev) {
-			var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 			goog.dom.insertSiblingBefore(block, prev);
-			saved.restore();
 		}
-	}
+	});
+
+	saved.restore();
 };
 
 /**
  * Moves the current block down within its parent list
  */
 takeNote.Editor.prototype.moveBlockDown = function () {
-	var block = this.getCurrentBlock_();
-	if (block) {
+	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
 		var next = block.nextSibling;
 		if (next) {
-			var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 			goog.dom.insertSiblingAfter(block, next);
-			saved.restore();
 		}
-	}
+	});
+
+	saved.restore();
 };
 
 /**
@@ -623,46 +637,59 @@ takeNote.Editor.prototype.getNextBlockTypeKey_ = function () {
 };
 
 /**
- * @return {Element?} The deepest block containing the current selection.
- *   Null if there is no selection or there is no block that would contain
- *   the whole selection.
+ * @return {Array.<Element>} The deepest blocks containing the current selection.
  */
-takeNote.Editor.prototype.getCurrentBlock_ = function () {
+takeNote.Editor.prototype.getCurrentBlocks_ = function () {
 	var range = goog.dom.Range.createFromWindow();
 	if (range === null) {
 		return null;
 	}
 
-	return this.getBlockFromRange_(range);
+	return this.getBlocksFromRange_(range);
 };
 
-takeNote.Editor.prototype.getCurrentBlocks_ = function () {
-	
-}
-
-takeNote.Editor.prototype.getBlockFromRange_ = function (range) {
+takeNote.Editor.prototype.getBlocksFromRange_ = function (range) {
 	var cont = range.getContainer();
 
 	// Check if we are in the area
 	if (!goog.dom.contains(this.area_, cont)) {
-		return null;
+		return [];
 	}
+	// Empty area?
 	if (cont === this.area_ && this.area_.childNodes.length === 0) {
-		return null;
+		return [];
 	}
 
+
+	// Multiple blocks
 	if (cont.tagName === goog.dom.TagName.UL) {
-		throw new Error('More than one block in the range');
+		var blocks = [];
+		var possible_blocks = cont.getElementsByTagName(goog.dom.TagName.LI);
+		var reached_range = false;
+		var start = range.getStartNode();
+		var end = range.getEndNode();
+		Array.prototype.some.call(possible_blocks, function (block) {
+			if (!reached_range) {
+				if (goog.dom.contains(block, start)) {
+					reached_range = true;
+					blocks.push(block);
+				}
+			} else {
+				blocks.push(block);
+				return goog.dom.contains(block, end);
+			}
+		});
+		return blocks;
 	}
 
 	// Find the closest parent block
 	do {
 		if (cont.tagName === goog.dom.TagName.LI) {
-			return /** @type {Element} */ cont;
+			return /** @type {Array.<Element>} */ [ cont ];
 		}
 		cont = cont.parentNode;
 	} while (cont !== this.area_);
-	return null; // Unreachable
+	return []; // Unreachable
 };
 
 /**
@@ -692,9 +719,9 @@ takeNote.Editor.prototype.onKeyDown_ = function (e) {
 			}
 			break;
 		case goog.events.KeyCodes.BACKSPACE:
-			var block = this.getCurrentBlock_();
+			var block = this.getCurrentBlocks_()[0];
 			var range = goog.dom.Range.createFromWindow();
-			if (range.isCollapsed() && range.getStartNode().parentNode === block.firstChild) {
+			if (range.isCollapsed() && range.getStartNode().parentNode === block.firstChild && range.getStartOffset() === 0) {
 				var prev = goog.dom.dataset.get(block, 'list');
 				if (prev) {
 					this.setListType(null);
@@ -775,8 +802,8 @@ takeNote.Editor.prototype.removeAppleSpans_ = function () {
  * Normalizes (concantates text nodes in) the current block
  */
 takeNote.Editor.prototype.normalizeCurrentBlock_ = function () {
-	var block = this.getCurrentBlock_();
-	if (block !== null) {
+	var blocks = this.getCurrentBlocks_();
+	blocks.forEach(function (block) {
 		block.firstChild.normalize();
-	}
+	});
 };
