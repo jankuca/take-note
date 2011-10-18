@@ -642,7 +642,7 @@ takeNote.Editor.prototype.getNextBlockTypeKey_ = function () {
 takeNote.Editor.prototype.getCurrentBlocks_ = function () {
 	var range = goog.dom.Range.createFromWindow();
 	if (range === null) {
-		return null;
+		return [];
 	}
 
 	return this.getBlocksFromRange_(range);
