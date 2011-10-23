@@ -481,14 +481,12 @@ takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 		goog.dom.dataset.set(block, 'list',
 			goog.dom.dataset.get(current_block, 'list') || '');
 
-		if (current_blocks.length > 1) {
 			var current_cnt = current_block.firstChild;
 			if (current_cnt.lastChild) {
 				// Empty block
 				var range = goog.dom.Range.createFromWindow().getBrowserRangeObject();
-				range.setEnd(current_cnt.lastChild, current_cnt.lastChild.length);
+				range.setEnd(current_cnt, current_cnt.childNodes.length);
 				goog.dom.appendChild(cnt, range.extractContents());
-			}
 		}
 		goog.dom.insertSiblingAfter(block, current_block);
 	} else {
