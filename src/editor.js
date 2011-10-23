@@ -273,12 +273,42 @@ takeNote.Editor.prototype.setInlineType = function (key) {
 		return;
 	}
 
-	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
-
 	var range = /** @type {!goog.dom.AbstractRange} */ goog.dom.Range.createFromWindow();
-	this.applyInlineTypeToRange_(range, key);
+	var start_node = range.getStartNode();
+	var end_node = range.getEndNode();
+	var end_offset = range.getEndOffset();
+	var in_range = false;
+	blocks.some(function (block) {
+		var cont = block.firstChild;
+		var r = range.clone();
+		var native_r = r.getBrowserRangeObject();
+		if (!in_range) {
+			if (goog.dom.contains(cont, start_node)) {
+				if (goog.dom.contains(cont, end_node)) {
+					this.applyInlineTypeToRange_(r, key);
+					return true;
+				}
 
-	saved.restore();
+				in_range = true;
+				native_r.setEnd(cont, cont.childNodes.length);
+				this.applyInlineTypeToRange_(r, key);
+			}
+		} else {
+			native_r.setStart(cont, 0);
+			if (goog.dom.contains(cont, end_node)) {
+				native_r.setEnd(end_node, end_offset);
+				this.applyInlineTypeToRange_(r, key);
+				return true;
+			} else {
+				native_r.setEnd(cont, cont.childNodes.length);
+				this.applyInlineTypeToRange_(r, key);
+			}
+		}
+	}, this);
+
+	//var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
+	//this.applyInlineTypeToRange_(range, key);
+	//saved.restore();
 };
 
 /**
@@ -289,78 +319,41 @@ takeNote.Editor.prototype.setInlineType = function (key) {
 takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 	var type = takeNote.Types[key];
 
-	var cont = range.getContainer();
-
-	if (!range.isCollapsed()) {
-		var contents = cont;
-		if (cont.tagName !== goog.dom.TagName.UL
-			&& cont.tagName !== goog.dom.TagName.LI) {
-			contents = range.getBrowserRangeObject().cloneContents();
-		}
-		var olds = goog.dom.getElementsByTagNameAndClass(
-			type.tagName, type.className, contents);
-		var i = olds.length;
-		// If there are parts of the range of the target type, remove them.
-		if (i !== 0) {
-			var old, child;
-			while (old = olds[--i]) {
-				while (child = old.firstChild) {
-					(old.parentNode || contents).insertBefore(child, old);
-				}
-				goog.dom.removeNode(old);
-			}
-
-			if (cont !== contents) {
-				range.replaceContentsWithNode(contents);
-			}
-		} else {
-			var type_node = this.createInlineTypeNode_(type);
-			try {
-				range.surroundContents(type_node);
-			} catch (err) {
-				// BAD_BOUNDARYPOINTS_ERR
-
-				// Determine whether more than one block is selected
-				// Being inside the editor area is implied thus we do not need to worry about that.
-				/*var start_block = goog.dom.getAncestorByTagName(range.getStartNode(), goog.dom.TagName.LI);
-				var end_block = goog.dom.getAncestorByTagName(range.getEndNode(), goog.dom.TagName.LI);
-				if (start_block === end_block) {
-					// We cannot just surround the selection. That already failed above.
-				} else {*/
-
-				var iterator = range.__iterator__();
-				var node, r;
-				
-				if (cont.tagName === goog.dom.TagName.UL) {
-					
-				}
-
-				node = iterator.next(); // start node
-				r = goog.dom.Range.createFromNodeContents(node);
-				r.getBrowserRangeObject().setStart(node, range.getStartOffset());
-				this.applyInlineTypeToRange_(r, key);
-
-				var prev = node;
-				while (node !== range.getEndNode()) {
-					if (node.tagName === goog.dom.TagName.LI
-						&& prev.tagName === goog.dom.TagName.LI) {
-						// begining of a block inside the selection
-						r = /** @type {!goog.dom.AbstractRange} */ goog.dom.Range.createFromNodeContents(node);
-						this.applyInlineTypeToRange_(r, key);
-					}
-					prev = node;
-					node = iterator.next();
-				}
-
-				// node === range.getEndNode()
-				node = range.getEndNode();
-				r = /** @type {!goog.dom.AbstractRange} */ goog.dom.Range.createFromNodeContents(node);
-				r.getBrowserRangeObject().setEnd(node, range.getEndOffset());
-				this.applyInlineTypeToRange_(r, key);
-			}
-		}
+	if (range.isCollapsed()) {
+		alert('not implemented');
 	} else {
-		// todo: apply type to the word the caret is currently in
+		var cont = range.getContainer();
+		var frag = range.getBrowserRangeObject().cloneContents();
+		var olds = Array.prototype.slice.call(
+			goog.dom.getElementsByTagNameAndClass(type.tagName, type.className, frag));
+		
+		// standalone? (text<tag>selection</tag>text)
+		// cont = selection
+		if (cont.nodeType === cont.TEXT_NODE) {
+			var cont_parent = cont.parentNode; // cont_parent = <tag>
+			if (cont_parent.tagName === type.tagName && (cont_parent.className || null) === (type.className || null)) {
+				olds = [ cont_parent ];
+			}
+		}
+
+		var ii = olds.length;
+		if (ii) {
+			var old;
+			for (var i = 0; old = olds[i]; ++i) {
+				while (old.firstChild) {
+					old.parentNode.insertBefore(old.firstChild, old);
+				}
+				old.parentNode.removeChild(old);
+			}
+			range.replaceContentsWithNode(frag);
+		} else {
+			var node = goog.dom.createDom(type.tagName);
+			if (type.className) {
+				node.className = type.className;
+			}
+			node.appendChild(frag);
+			range.replaceContentsWithNode(node);
+		}
 	}
 };
 
