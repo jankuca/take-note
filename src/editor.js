@@ -324,18 +324,19 @@ takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 	} else {
 		var cont = range.getContainer();
 		var frag = range.getBrowserRangeObject().cloneContents();
-		var olds = Array.prototype.slice.call(
-			goog.dom.getElementsByTagNameAndClass(type.tagName, type.className, frag));
 		
 		// standalone? (text<tag>selection</tag>text)
 		// cont = selection
 		if (cont.nodeType === cont.TEXT_NODE) {
 			var cont_parent = cont.parentNode; // cont_parent = <tag>
 			if (cont_parent.tagName === type.tagName && (cont_parent.className || null) === (type.className || null)) {
-				olds = [ cont_parent ];
+				frag = document.createDocumentFragment();
+				frag.appendChild(cont_parent);
 			}
 		}
 
+		var olds = Array.prototype.slice.call(
+			goog.dom.getElementsByTagNameAndClass(type.tagName, type.className, frag));
 		var ii = olds.length;
 		if (ii) {
 			var old;
