@@ -45,6 +45,17 @@ takeNote.Types = {
 		tagName: 'S'
 	},
 
+	'sub': {
+		inline: true,
+		group: 'indexes',
+		tagName: 'SUB'
+	},
+	'sup': {
+		inline: true,
+		group: 'indexes',
+		tagName: 'SUP'
+	},
+
 	'image': {
 		tagName: 'IMG',
 		nextBlockType: 'text',
