@@ -12,12 +12,11 @@ takeNote.paste.Writer = function () {
 
 /**
  * @param {Array} input
- * @param {function(Node)} callback
+ * @param {function(string)} callback
  */
 takeNote.paste.Writer.prototype.parse = function (input, callback) {
-	var doc = document.createDocumentFragment();
-	this.elements = [doc];
-	this.level = 0;
+	this.cdata_opened = false;
+	this.output = [];
 
 	for (var i = 0, ii = input.length; i < ii; i++) {
 		var type = input[i][0];
@@ -40,22 +39,45 @@ takeNote.paste.Writer.prototype.parse = function (input, callback) {
 		}
 	}
 
-	callback(doc);
+	callback(this.output.join(''));
 }
 
 /**
  * @private
- * @param {Element} out_el
- * @param {Array} attrs
  */
-takeNote.paste.Writer.prototype.setAttributes_ = function (out_el, attrs) {
-	if (attrs) {
-		var i = attrs.length;
-		while (i--) {
-			out_el.setAttribute(attrs[i][0], attrs[i][1]);
-		}
+takeNote.paste.Writer.prototype.openCDATA_ = function () {
+	if (!this.cdata_opened) {
+		this.cdata_opened = true;
+		this.output.push('<![CDATA[');
 	}
-} 
+}
+
+/**
+ * @private
+ */
+takeNote.paste.Writer.prototype.closeCDATA_ = function () {
+	if (this.cdata_opened) {
+		this.cdata_opened = false;
+		this.output.push(']]>');
+	}
+}
+
+/**
+ * @private
+ * @param {string} elem
+ * @param {Array} attrs
+ * @return {string}
+ */
+takeNote.paste.Writer.prototype.getAttributes_ = function(elem, attrs) {
+	var out_attrs = [];
+	
+	var i = attrs.length;
+	while (i--) {
+		out_attrs.push(attrs[i][0] + '="' + attrs[i][1] + '"');
+	}
+	
+	return (out_attrs.length > 0) ? ' ' + out_attrs.join(' ')  : '';
+}
 
 /**
  * @private
@@ -65,10 +87,8 @@ takeNote.paste.Writer.prototype.setAttributes_ = function (out_el, attrs) {
 takeNote.paste.Writer.prototype.writeStartTag_ = function (elem, attrs) {
 	var act_type = takeNote.paste.Types[elem];
 	if ((act_type) && (act_type.tag_name)) {
-		var el = document.createElement(act_type.tag_name);
-		this.setAttributes_(el, attrs)
-		this.elements.push(el);
-		this.level++;
+		this.closeCDATA_();
+		this.output.push('<' + act_type.tag_name + this.getAttributes_(elem, attrs) + '>')
 	}
 }
 
@@ -80,9 +100,8 @@ takeNote.paste.Writer.prototype.writeStartTag_ = function (elem, attrs) {
 takeNote.paste.Writer.prototype.writeStandeloneTag_ = function (elem, attrs) {
 	var act_type = takeNote.paste.Types[elem];
 	if ((act_type) && (act_type.tag_name)) {
-		var el = document.createElement(act_type.tag_name);
-		this.setAttributes_(el, attrs);
-		this.elements[this.level].appendChild(el);
+		this.closeCDATA_();
+		this.output.push('<' + act_type.tag_name + this.getAttributes_(elem, attrs) + '/>');
 	}
 }
 
@@ -93,9 +112,8 @@ takeNote.paste.Writer.prototype.writeStandeloneTag_ = function (elem, attrs) {
 takeNote.paste.Writer.prototype.writeEndTag_ = function (elem) {
 	var act_type = takeNote.paste.Types[elem];
 	if ((act_type) && (act_type.tag_name)) {
-		var el = this.elements.pop();
-		this.level--;
-		this.elements[this.level].appendChild(el);
+		this.closeCDATA_();
+		this.output.push('</' + act_type.tag_name + '>');
 	}
 }
 
@@ -104,6 +122,6 @@ takeNote.paste.Writer.prototype.writeEndTag_ = function (elem) {
  * @param {string} txt
  */
 takeNote.paste.Writer.prototype.writeText_ = function(txt) {
-	var tn = document.createTextNode(txt);
-	this.elements[this.level].appendChild(tn);
+	this.openCDATA_();
+	this.output.push(txt);
 }

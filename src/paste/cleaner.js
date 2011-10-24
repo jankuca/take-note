@@ -31,7 +31,7 @@ takeNote.paste.Cleaner = function () {
 /**
  * Start cleaning
  * @param {Element} doc Document to clean
- * @param {function(Node)} callback Callback with result
+ * @param {function(string)} callback Callback with result
  */
 takeNote.paste.Cleaner.prototype.clean = function (doc, callback) {
 	var walker = new takeNote.paste.Walker(doc);
@@ -46,8 +46,8 @@ takeNote.paste.Cleaner.prototype.clean = function (doc, callback) {
 		while (this.opened.length > 0) {
 			this.closeTag_(this.getParent_());
 		}
-		this.writer.parse(this.output, function (df) {
-			callback(df);
+		this.writer.parse(this.output, function (str) {
+			callback(str);
 		});
 	}.bind(this);
 
