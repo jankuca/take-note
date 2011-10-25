@@ -562,7 +562,7 @@ takeNote.Editor.prototype.outdentCurrentBlock = function () {
 		if (parent.childNodes.length === 0) {
 			goog.dom.removeNode(parent);
 		}
-	});
+	}, this);
 
 	saved.restore();
 };
