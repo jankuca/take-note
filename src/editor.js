@@ -473,7 +473,7 @@ takeNote.Editor.prototype.addBlock = function (key, dont_move_caret) {
 	if (current_block) {
 		// Keep previous list type
 		goog.dom.dataset.set(block, 'list',
-			goog.dom.dataset.get(current_block, 'list') || '');
+			goog.dom.dataset.get(current_block, 'list') || null);
 
 			var current_cnt = current_block.firstChild;
 			if (current_cnt.lastChild) {
