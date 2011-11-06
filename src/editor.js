@@ -548,11 +548,12 @@ takeNote.Editor.prototype.indentCurrentBlock = function () {
 takeNote.Editor.prototype.outdentCurrentBlock = function () {
 	var saved = goog.dom.Range.createFromWindow().saveUsingCarets();
 
+	var self = this;
 	var blocks = this.getCurrentBlocks_();
 	blocks.forEach(function (block) {
 		var parent = block.parentNode;
 		// Check for minimal indentation
-		if (parent === this.area_) {
+		if (parent === self.area_) {
 			return;
 		}
 
@@ -562,7 +563,7 @@ takeNote.Editor.prototype.outdentCurrentBlock = function () {
 		if (parent.childNodes.length === 0) {
 			goog.dom.removeNode(parent);
 		}
-	}, this);
+	});
 
 	saved.restore();
 };
