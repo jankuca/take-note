@@ -320,7 +320,7 @@ takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 	var type = takeNote.Types[key];
 
 	if (range.isCollapsed()) {
-		alert('not implemented');
+		// alert('not implemented');
 	} else {
 		var cont = range.getContainer();
 		var frag = range.getBrowserRangeObject().cloneContents();
