@@ -70,11 +70,11 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 			for (var i = 0, ii = child_list.length; i < ii; ++i) {
 				var child = child_list[i];
 				var key = child.tagName ? child.tagName.toLowerCase() : 'null';
-				if (child.nodeType === child.CDATA_SECTION_NODE) {
-					var type = takeNote.Types[key];
-					if (key === 'null' || type.inline) {
+				var type = takeNote.Types[key];
+				if (key === 'null' || !type || type.inline) {
+					//if (child.nodeType === child.CDATA_SECTION_NODE) {
 						this.handleInlineNode(child);
-					}
+					//}
 				} else {
 					this.handleBlockNodes(Array.prototype.slice.call(child_list, i - 1));
 					break;
