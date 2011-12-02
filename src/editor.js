@@ -451,6 +451,55 @@ takeNote.Editor.prototype.erase = function () {
 	this.addBlock(this.block_type_key_);
 };
 
+takeNote.Editor.prototype.clearFormatting = function () {
+	var blocks = this.getCurrentBlocks_();
+	if (!blocks.length) {
+		// Implies the selection being outside the editor area
+		return;
+	}
+
+	var range = /** @type {!goog.dom.AbstractRange} */ goog.dom.Range.createFromWindow();
+	var start_node = range.getStartNode();
+	var end_node = range.getEndNode();
+	var end_offset = range.getEndOffset();
+	var in_range = false;
+	blocks.some(function (block) {
+		var cont = block.firstChild;
+		var r = range.clone();
+		var native_r = r.getBrowserRangeObject();
+		if (!in_range) {
+			if (goog.dom.contains(cont, start_node)) {
+				if (goog.dom.contains(cont, end_node)) {
+					this.clearRangeFormatting_(r);
+					return true;
+				}
+
+				in_range = true;
+				native_r.setEnd(cont, cont.childNodes.length);
+				this.clearRangeFormatting_(r);
+			}
+		} else {
+			native_r.setStart(cont, 0);
+			if (goog.dom.contains(cont, end_node)) {
+				native_r.setEnd(end_node, end_offset);
+				this.clearRangeFormatting_(r);
+				return true;
+			} else {
+				native_r.setEnd(cont, cont.childNodes.length);
+				this.clearRangeFormatting_(r);
+			}
+		}
+	}, this);
+};
+
+takeNote.Editor.prototype.clearRangeFormatting_ = function (range) {
+	var text = document.createTextNode(range.getText());
+	range.replaceContentsWithNode(text);
+
+	//goog.dom.Range.createFromNodeContents(text).select();
+};
+
+
 /**
  * Inserts a new block after the active one
  * @param {string=} key Type key of the new block.

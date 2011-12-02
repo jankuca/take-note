@@ -19,3 +19,5 @@ goog.exportProperty(takeNote.Editor.prototype, 'setListType', takeNote.Editor.pr
 
 goog.exportProperty(takeNote.Editor.prototype, 'indentCurrentBlock', takeNote.Editor.prototype.indentCurrentBlock);
 goog.exportProperty(takeNote.Editor.prototype, 'outdentCurrentBlock', takeNote.Editor.prototype.outdentCurrentBlock);
+
+goog.exportProperty(takeNote.Editor.prototype, 'clearFormatting', takeNote.Editor.prototype.clearFormatting);
