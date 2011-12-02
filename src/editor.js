@@ -770,6 +770,8 @@ takeNote.Editor.prototype.onKeyDown_ = function (e) {
 				if (prev) {
 					this.setListType(null);
 					e.preventDefault();
+				} else if (block.parentNode !== this.area_) {
+					this.outdentCurrentBlock();
 				}
 			}
 			break;
