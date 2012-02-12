@@ -119,16 +119,6 @@ takeNote.paste.Types = (function () {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
 		},
-		'img': {
-			tag_name: 'img',
-			type: 'inline',
-			standelone: true,
-			attributes: {
-				'src': function (value) {
-					return ['src', value];
-				}
-			}
-		},
 
 		// New types
 		'_highlight': {
@@ -155,17 +145,17 @@ takeNote.paste.Types = (function () {
 		// Lists
 		'ul': {
 			type: 'block',
-			child_types: ['%list_item%']
+			child_types: ['%list_item%', 'ul', 'ol']
 		},
 		'ol': {
 			type: 'block',
-			child_types: ['%list_item%']
+			child_types: ['%list_item%', 'ul', 'ol']
 		},
 		'li': {
 			tag_name: 'text',
 			tag_attrs: {
 			type: function (parent) {
-					return ['list', (parent === 'ol') ? 'number' : 'dash'];
+					return ['list', (parent === 'ol') ? 'number' : 'disc'];
 				}
 			},
 			type: 'list_item',
