@@ -35,7 +35,7 @@ takeNote.paste.Styles = {
 		}
 	},
 
-	'background': function (value) {
+	'background-color': function (value) {
 		var color = new takeNote.paste.RGBColor(value).toHex();
 		if (color) {
 			return ['_highlight', ['color', color]];	
