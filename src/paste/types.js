@@ -181,29 +181,39 @@ takeNote.paste.Types = (function () {
 		},
 		
 		// Table
-		'table': {
-			tag_name: 'table',
-			type: 'block',
-			child_types: ['tr']
-		},
-		'tr': {
-			tag_name: 'tr',
-			type: 'table_row',
-			parent_types: ['table'],
-			child_types: ['%table_content%']
-		},
-		'td': {
-			tag_name: 'td',
-			type: 'table_content',
-			parent_types: ['%table_row%'],
-			child_types: ['%flow%']
-		},
-		'th': {
-			tag_name: 'th',
-			type: 'table_content',
-			parent_types: ['%table_row%'],
-			child_types: ['%flow%']
-		},
+		// 'table': {
+		// 	tag_name: 'table',
+		// 	type: 'block',
+		// 	child_types: ['thead', 'tbody']
+		// },
+		// 'thead': {
+		// 	tag_name: 'thead',
+		// 	type: 'table_head',
+		// 	child_types: ['tr']
+		// },
+		// 'tbody': {
+		// 	tag_name: 'tbody',
+		// 	type: 'table_body',
+		// 	child_types: ['tr']
+		// },
+		// 'tr': {
+		// 	tag_name: 'tr',
+		// 	type: 'table_row',
+		// 	parent_types: ['tbody'],
+		// 	child_types: ['%table_content%']
+		// },
+		// 'td': {
+		// 	tag_name: 'td',
+		// 	type: 'table_content',
+		// 	parent_types: ['%table_row%'],
+		// 	child_types: ['%flow%']
+		// },
+		// 'th': {
+		// 	tag_name: 'th',
+		// 	type: 'table_content',
+		// 	parent_types: ['%table_row%'],
+		// 	child_types: ['%flow%']
+		// },
 		
 		// Copy content
 		'acronym': {
@@ -234,6 +244,11 @@ takeNote.paste.Types = (function () {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
 		},
+		'div': {
+			type: 'inline',
+			child_types: ['%inline%', '%text%']
+		},
+		
 		// Copy content + Attributes as style
 		'font': {
 			type: 'inline',
@@ -244,9 +259,6 @@ takeNote.paste.Types = (function () {
 		},
 
 		// Replace
-		'div': {
-			replace: 'p'
-		},
 		'pre': {
 			replace: 'p'
 		},
