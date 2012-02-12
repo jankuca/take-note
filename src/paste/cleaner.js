@@ -134,6 +134,37 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	if (!act_type) {
 		return this.opened.push(elem);
 	}
+
+	// Find out, if element is break line, if it is - close elements until block element is founded and then reopen all closed elements
+	if (act_type.break_line) {
+		// Create empty paragraph, if there is not opened block element
+		if (this.block.length === 0) {
+			this.openTag_('p');
+			return this.closeTag_('p');
+		}
+
+		var last_block = this.block[this.block.length - 1];
+		this.closeTag_(last_block);
+
+		// Create array with closed elements
+		var closed = [];
+		var last_closed = [];
+		var i = this.output.length;
+
+		while ((i--) && (last_closed[1] !== last_block)) {
+			if (this.output[i][0] === 'st') {
+				closed.push(this.output[i]);
+				last_closed = this.output[i];
+			}
+		}
+
+		// Reopen closed elements
+		i = closed.length;
+		while (i--) {
+			this.openTag_(closed[i][1], closed[i][2]);
+		}
+		return;
+	}
 	
 	// Find out, if element is replacable
 	if (act_type.replace) {

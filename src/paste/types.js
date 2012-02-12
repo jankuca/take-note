@@ -244,14 +244,16 @@ takeNote.paste.Types = (function () {
 		},
 
 		// Replace
-		'br': {
-			replace: 'p'
-		},
 		'div': {
 			replace: 'p'
 		},
 		'pre': {
 			replace: 'p'
+		},
+		
+		// Break line
+		'br': {
+			break_line: true
 		}
 	}
 	// End of types definition
