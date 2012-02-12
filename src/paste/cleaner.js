@@ -166,9 +166,9 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	}
 	
 	// Find out, if there is the same (inline) element opened
-	if ((act_type.type === 'inline') && (this.opened.indexOf(elem) > -1)) {
-		return;
-	}
+	// if ((act_type.type === 'inline') && (this.opened.indexOf(elem) > -1)) {
+	// 	return;
+	// }
 	
 	// Create tag
 	this.output.push([takeNote.paste.START_TAG, elem, this.cleanAttributes_(elem, attrs)]);
