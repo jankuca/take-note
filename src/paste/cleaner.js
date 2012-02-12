@@ -135,6 +135,15 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 		return this.opened.push(elem);
 	}
 
+	// Don't open <a> element, if there is not href
+	if (elem === 'a') {
+		if (!attrs.some(function (attr) {
+			return (attr[0] === 'href' && attr[1]);	
+		})) {
+			return;
+		}
+	}
+
 	// Find out, if element is break line, if it is - close elements until block element is founded and then reopen all closed elements
 	if (act_type.break_line) {
 		// Create empty paragraph, if there is not opened block element
