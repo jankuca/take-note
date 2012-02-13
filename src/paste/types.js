@@ -15,6 +15,12 @@ takeNote.paste.Types = (function () {
 			child_types: ['%inline%', '%text%'],
 			empty: true
 		},
+		'div': {
+			tag_name: 'text',
+			type: 'block',
+			child_types: ['%inline%', '%text%'],
+			empty: false
+		},
 		
 		'h1': {
 			tag_name: 'h1',
@@ -241,10 +247,6 @@ takeNote.paste.Types = (function () {
 			child_types: ['%inline%', '%text%']
 		},
 		'wbr': {
-			type: 'inline',
-			child_types: ['%inline%', '%text%']
-		},
-		'div': {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
 		},
