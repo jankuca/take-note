@@ -61,7 +61,7 @@ takeNote.paste.Cleaner.prototype.clean = function (doc, callback) {
 
 	walker.onCharacters = function (chars) {
 		chars = chars.replace('\n', '');
-		if (chars.trim().length > 0) {
+		if (chars.length > 0) {
 			this.text_(chars);
 		}
 	}.bind(this);
