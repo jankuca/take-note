@@ -39,7 +39,9 @@ takeNote.paste.Writer.prototype.parse = function (input, callback) {
 		}
 	}
 
-	callback(this.output.join(''));
+	var output = this.output.join('');
+	output = output.replace(/&(?!#?\w{1,10};)/g, '&amp;');
+	callback(output);
 }
 
 /**
