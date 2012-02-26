@@ -100,7 +100,7 @@ takeNote.paste.Cleaner.prototype.isElementOpened_ = function (elem) {
 }
 
 /**
- * Get name of last element in output. 
+ * Get name of last element in output.
  * @private
  * @return {string} Name of last element in output
  */
@@ -117,11 +117,11 @@ takeNote.paste.Cleaner.prototype.lastOutput_ = function () {
 takeNote.paste.Cleaner.prototype.cleanAttributes_ = function (elem, attrs) {
 	var out_attrs = [];
 	var act_type = takeNote.paste.Types[elem];
-	
+
 	if (!act_type) {
 		return out_attrs;
 	}
-	
+
 	if (act_type.attributes) {
 		var i = attrs.length;
 		while (i--) {
@@ -137,14 +137,14 @@ takeNote.paste.Cleaner.prototype.cleanAttributes_ = function (elem, attrs) {
 		var parent = this.getParent_();
 		Object.keys(act_type.tag_attrs).forEach(function (tag_attr) {
 			var attr = act_type.tag_attrs[tag_attr](parent);
-			
+
 			// Ignore tag_attr, if attribute with tag_attr name already exists
 			if (out_attrs.every(function (out_attr) { return out_attr[0] !== attr[0]; })) {
 				out_attrs.push(attr);
 			}
 		});
 	}
-	
+
 	return out_attrs;
 }
 
@@ -155,7 +155,7 @@ takeNote.paste.Cleaner.prototype.cleanAttributes_ = function (elem, attrs) {
  */
 takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	var act_type = takeNote.paste.Types[elem];
-	
+
 	// Find out, if element is in types
 	if (!act_type) {
 		return this.opened.push([elem, attrs]);
@@ -164,7 +164,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	// Don't open <a> element, if there is not href
 	if (elem === 'a') {
 		if (!attrs.some(function (attr) {
-			return (attr[0] === 'href' && attr[1]);	
+			return (attr[0] === 'href' && attr[1]);
 		})) {
 			return;
 		}
@@ -214,7 +214,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 		}
 		return;
 	}
-	
+
 	// Find out, if element is replacable
 	if (act_type.replace) {
 		return this.openTag_(act_type.replace, attrs);
@@ -225,7 +225,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	if (parent_type && parent_type.ignoreChildType && parent_type.ignoreChildType(this.getEntireParent_(), this.lastOutput_(), elem)) {
 		return;
 	}
-	
+
 	// Find out, if parent exists
 	if (this.opened.length > 0) {
 		// Find out, if element could be in parent
@@ -235,7 +235,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 			parent = this.getParent_();
 		}
 	}
-	
+
 	// Find out, if element has required parent
 	var parent = this.getParent_();
 	if ((act_type.parents) && (!act_type.parents[parent])) {
@@ -245,17 +245,17 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	if ((act_type.type === 'inline') && (this.block.length === 0)) {
 		this.openTag_('p');
 	}
-	
+
 	// Find out, if element is standelone
 	if (act_type.standelone) {
 		return this.output.push([takeNote.paste.STANDELONE_ELEM, elem, this.cleanAttributes_(elem, attrs)]);
 	}
-	
+
 	// Find out, if there is the same (inline) element opened
 	// if ((act_type.type === 'inline') && (this.opened.indexOf(elem) > -1)) {
 	// 	return;
 	// }
-	
+
 	// Create tag
 	this.output.push([takeNote.paste.START_TAG, elem, this.cleanAttributes_(elem, attrs)]);
 	this.opened.push([elem, attrs]);
@@ -278,7 +278,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 			}
 		}
 	}
-	
+
 	// Handling inline styles
 	if (attrs) {
 		var style_attr;
@@ -288,19 +288,19 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 				break;
 			}
 		}
-		
+
 		if (style_attr) {
 			var styles = style_attr.split(/\s*;\s*/);
 			for (var i = 0, ii = styles.length; i < ii; i++) {
 				var style = styles[i].split(/\s*:\s*/);
 				var style_name = style[0];
 				var style_value = style[1];
-				
+
 				if (takeNote.paste.Styles[style_name]) {
 					var result = takeNote.paste.Styles[style_name](style_value);
 					if (result) {
 						this.openTag_(result[0], (result[1]) ? [result[1]] : []);
-					} 
+					}
 				}
 			}
 		}
@@ -317,57 +317,57 @@ takeNote.paste.Cleaner.prototype.text_ = function (txt) {
 		this.openTag_('p');
 		return this.output.push([takeNote.paste.TEXT, txt]);
 	}
-	
+
 	var parent_type = takeNote.paste.Types[this.getParent_()];
-	
-	// Find out, if parent element is supported and if text could be in parent 
+
+	// Find out, if parent element is supported and if text could be in parent
 	if ((!parent_type) || (!parent_type['childs']['text'])) {
 		return;
 	}
-	
+
 	// Find out, if is opened required (block) element -- TODO: remove dependency
 	if (this.block.length === 0) {
 		this.openTag_('p');
 	}
-	
-	this.output.push([takeNote.paste.TEXT, txt]);	
+
+	this.output.push([takeNote.paste.TEXT, txt]);
 }
 
 /**
  * @private
  * @param {string} elem
  */
-takeNote.paste.Cleaner.prototype.closeTag_ = function (elem) {	
+takeNote.paste.Cleaner.prototype.closeTag_ = function (elem) {
 	var act_type = takeNote.paste.Types[elem];
-	
+
 	// Find out, if element is replacable
 	if ((act_type) && (act_type.replace)) {
 		elem = act_type.replace;
 	}
-	
+
 	// Find out, if element is opened
 	if (!this.isElementOpened_(elem)) {
 		return;
 	}
-	
+
 	// Iterate opened backward, while element is not closed
 	var stop = false;
 	var closing_tag;
-	
+
 	while ((!stop) && (closing_tag = this.opened.pop()[0])) {
 		var closing_type = takeNote.paste.Types[closing_tag];
-		
+
 		// Find out, if element is replacable
 		if ((closing_type) && (closing_type.replace)) {
 			closing_tag = closing_type.replace;
 			closing_type = takeNote.paste.Types[closing_tag];
 		}
-		
+
 		// This is the last iteration, if iterating element is same as closing element
 		if (closing_tag === elem) {
 			stop = true;
 		}
-		
+
 		// Find out, if element is supported
 		if (closing_type) {
 			var last_output = this.lastOutput_();
@@ -383,7 +383,7 @@ takeNote.paste.Cleaner.prototype.closeTag_ = function (elem) {
 			} else {
 				this.output.push([takeNote.paste.END_TAG, closing_tag]);
 			}
-			
+
 			// Find out, if type of element was block
 			if (closing_type.type === 'block') {
 				this.block.pop();

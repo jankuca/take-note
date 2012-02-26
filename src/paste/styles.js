@@ -10,7 +10,7 @@ goog.provide('takeNote.paste.Styles');
 takeNote.paste.Styles = {
 	'font-weight': function (value) {
 		switch (value) {
-			case 'bold': 
+			case 'bold':
 				return ['strong'];
 				break;
 		}
@@ -18,7 +18,7 @@ takeNote.paste.Styles = {
 
 	'font-style': function (value) {
 		switch (value) {
-			case 'italic': 
+			case 'italic':
 				return ['em'];
 				break;
 		}

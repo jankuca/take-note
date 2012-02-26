@@ -81,7 +81,7 @@ takeNote.Walker.prototype.handleBlockNodes = function (blocks) {
 				}
 			}
 		}
-		
+
 		this.onblockend(data);
 	}, this);
 };

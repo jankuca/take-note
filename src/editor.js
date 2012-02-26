@@ -348,7 +348,7 @@ takeNote.Editor.prototype.applyInlineTypeToRange_ = function (range, key) {
 	} else {
 		var cont = range.getContainer();
 		var frag = range.getBrowserRangeObject().cloneContents();
-		
+
 		// standalone? (text<tag>selection</tag>text)
 		// cont = selection
 		if (cont.nodeType === cont.TEXT_NODE) {

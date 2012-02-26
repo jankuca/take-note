@@ -72,12 +72,12 @@ takeNote.paste.Writer.prototype.closeCDATA_ = function () {
  */
 takeNote.paste.Writer.prototype.getAttributes_ = function(elem, attrs) {
 	var out_attrs = [];
-	
+
 	var i = attrs.length;
 	while (i--) {
 		out_attrs.push(attrs[i][0] + '="' + attrs[i][1] + '"');
 	}
-	
+
 	return (out_attrs.length > 0) ? ' ' + out_attrs.join(' ')  : '';
 }
 

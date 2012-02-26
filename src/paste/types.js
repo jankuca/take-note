@@ -21,7 +21,7 @@ takeNote.paste.Types = (function () {
 			child_types: ['%inline%', '%text%'],
 			empty: false
 		},
-		
+
 		'h1': {
 			tag_name: 'h1',
 			type: 'block',
@@ -52,13 +52,13 @@ takeNote.paste.Types = (function () {
 			type: 'block',
 			child_types: ['%inline%', '%text%']
 		},
-		
+
 		'blockquote': {
 			tag_name: 'quote',
 			type: 'block',
 			child_types: ['%flow%']
 		},
-		
+
 		// Inline elements
 		'a': {
 			tag_name: 'a',
@@ -189,7 +189,7 @@ takeNote.paste.Types = (function () {
 				return false;
 			}
 		},
-		
+
 		'dl': {
 			tag_name: 'text',
 			type: 'block',
@@ -206,7 +206,7 @@ takeNote.paste.Types = (function () {
 			parent_types: ['dl'],
 			child_types: ['%flow%']
 		},
-		
+
 		// Table
 		// 'table': {
 		// 	tag_name: 'table',
@@ -241,7 +241,7 @@ takeNote.paste.Types = (function () {
 		// 	parent_types: ['%table_row%'],
 		// 	child_types: ['%flow%']
 		// },
-		
+
 		// Copy content
 		'acronym': {
 			type: 'inline',
@@ -271,7 +271,7 @@ takeNote.paste.Types = (function () {
 			type: 'inline',
 			child_types: ['%inline%', '%text%']
 		},
-		
+
 		// Copy content + Attributes as style
 		'font': {
 			type: 'inline',
@@ -285,16 +285,16 @@ takeNote.paste.Types = (function () {
 		'pre': {
 			replace: 'p'
 		},
-		
+
 		// Break line
 		'br': {
 			break_line: true
 		}
 	}
 	// End of types definition
-	
+
 	var types_group = {};
-	
+
 	Object.keys(types).forEach(function (type_name) {
 		var type = types[type_name];
 		if (!types_group[type.type]) {
@@ -303,13 +303,13 @@ takeNote.paste.Types = (function () {
 			types_group[type.type].push(type_name);
 		}
 	});
-	
+
 	types_group['text'] = ['text'];
 	types_group['flow'] = [].concat(types_group['block'], types_group['inline'], types_group['text']);
-	
+
 	Object.keys(types).forEach(function (type_name) {
 		var type = types[type_name];
-		
+
 		if (type.child_types) {
 			type['childs'] = {};
 			type.child_types.forEach(function (child_type) {
@@ -319,14 +319,14 @@ takeNote.paste.Types = (function () {
 					if (w_types_group) {
 						for (var i = 0; i < w_types_group.length; i++) {
 							type['childs'][w_types_group[i]] = {};
-						} 
+						}
 					}
 				} else {
 					type['childs'][child_type] = {}
 				}
 			});
 		}
-		
+
 		if (type.parent_types) {
 			type['parents'] = {};
 			type.parent_types.forEach(function (parent_type) {
@@ -342,8 +342,8 @@ takeNote.paste.Types = (function () {
 					type['parents'][parent_type] = {}
 				}
 			});
-		}	
+		}
 	});
-	
+
 	return types;
 })();
