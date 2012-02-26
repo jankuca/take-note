@@ -488,27 +488,35 @@ takeNote.Editor.prototype.clearFormatting = function () {
 	var end_offset = range.getEndOffset();
 	var in_range = false;
 	blocks.some(function (block) {
+		var is_plugin = goog.dom.dataset.get(block, 'plugin');
+
 		var cont = block.firstChild;
 		var r = range.clone();
 		var native_r = r.getBrowserRangeObject();
 		if (!in_range) {
 			if (goog.dom.contains(cont, start_node)) {
 				if (goog.dom.contains(cont, end_node)) {
-					this.clearRangeFormatting_(r);
+					if (!is_plugin) {
+						this.clearRangeFormatting_(r);
+					}
 					return true;
 				}
 
 				in_range = true;
-				native_r.setEnd(cont, cont.childNodes.length);
-				this.clearRangeFormatting_(r);
+				if (!is_plugin) {
+					native_r.setEnd(cont, cont.childNodes.length);
+					this.clearRangeFormatting_(r);
+				}
 			}
 		} else {
 			native_r.setStart(cont, 0);
 			if (goog.dom.contains(cont, end_node)) {
-				native_r.setEnd(end_node, end_offset);
-				this.clearRangeFormatting_(r);
+				if (!is_plugin) {
+					native_r.setEnd(end_node, end_offset);
+					this.clearRangeFormatting_(r);
+				}
 				return true;
-			} else {
+			} else if (!is_plugin) {
 				native_r.setEnd(cont, cont.childNodes.length);
 				this.clearRangeFormatting_(r);
 			}
