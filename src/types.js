@@ -38,7 +38,10 @@ takeNote.Types = {
 	'highlight': {
 		inline: true,
 		tagName: 'MARK',
-		className: 'highlight'
+		className: 'highlight',
+		attributes: {
+			'color': '$color'
+		}
 	},
 	'strike': {
 		inline: true,
@@ -54,6 +57,22 @@ takeNote.Types = {
 		inline: true,
 		group: 'indexes',
 		tagName: 'SUP'
+	},
+
+	'font': {
+		inline: true,
+		tagName: 'FONT',
+		attributes: {
+			'color': 'color'
+		}
+	},
+
+	'a': {
+		inline: true,
+		tagName: 'A',
+		attributes: {
+			'href': 'href'
+		}
 	},
 
 	'image': {

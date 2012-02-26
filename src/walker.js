@@ -99,6 +99,10 @@ takeNote.Walker.prototype.handleInlineNode = function (node) {
 					type: node.tagName.toLowerCase()
 				};
 			}
+			if (data.type) {
+				data.attributes = this.getNodeAttributes(node, data.type);
+			}
+
 			var result = this.oninlinestart(data);
 			if (result === false) {
 				return;
@@ -128,4 +132,73 @@ takeNote.Walker.prototype.getInlineType = function (node) {
 		}
 	}
 	return null;
+};
+
+takeNote.Walker.prototype.getNodeAttributes = function (node, type_key) {
+	var type = takeNote.Types[type_key];
+	if (!type) {
+		return {};
+	}
+
+	var map = type.attributes || {};
+	var visual = this.visual;
+
+	var parseStyleAttribute = function (value) {
+		var style = {};
+		if (!value) {
+			return style;
+		}
+		var props = value.split(/\s*;\s*/);
+		props.forEach(function (prop) {
+			var key = prop.split(':')[0];
+			style[toDashedStyleKey(key)] = prop.substr(key.length + 1);
+		});
+		return style;
+	};
+	var toDashedStyleKey = function (key) {
+		return key.replace(/[A-Z]/g, function (letter) {
+			return '-' + letter.toLowerCase();
+		});
+	};
+	var toNormalizedStyleKey = function (key) {
+		return key.replace(/-(.)/g, function (match, letter) {
+			return letter.toUpperCase();
+		});
+	};
+
+	var style = visual ? parseStyleAttribute(node.getAttribute('style')) : {};
+	var result = {};
+
+	Object.keys(map).forEach(function (key) {
+		var target = map[key];
+		var value;
+		if (!visual) {
+			value = node.getAttribute(key);
+			if (value) {
+				if (target[0] === '$') {
+					style[target.substr(1)] = value;
+				} else {
+					result[target] = value;
+				}
+			}
+		} else {
+			if (target[0] === '$') {
+				var style_key = toNormalizedStyleKey(target.substr(1));
+				value = node.style[style_key];
+			} else {
+				value = node.getAttribute(target);
+			}
+			if (value) {
+				result[key] = value;
+			}
+		}
+	});
+
+	if (!visual && style.length) {
+		result['style'] = Object.keys(style).map(function (key) {
+			return key + ': ' + style[key];
+		}).join('; ');
+	}
+
+	return result;
 };

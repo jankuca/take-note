@@ -234,10 +234,21 @@ takeNote.Editor.prototype.getXML = function (callback, prettyprint) {
 			xml += '<![CDATA[' + text + ']]>';
 		};
 		walker.oninlinestart = function (inline) {
-			xml += '<' + inline.type + '>';
+			if (inline.type) {
+				xml += '<' + inline.type;
+				Object.keys(inline.attributes).forEach(function (key) {
+					var value = inline.attributes[key];
+					value = value.replace(/"/g, '\\"');
+					value = value.replace(/&(?!#?\w{1,10};)/g, '&amp;');
+					xml += ' ' + key + '="' + value + '"';
+				});
+				xml += '>';
+			}
 		};
 		walker.oninlineend = function (inline) {
-			xml += '</' + inline.type + '>';
+			if (inline.type) {
+				xml += '</' + inline.type + '>';
+			}
 		};
 		walker.onblockend = function (block) {
 			level -= 1;
