@@ -89,14 +89,25 @@ takeNote.Editor.prototype.getArea = function () {
  * @param {Document=} document The document object to use to create elements
  */
 takeNote.Editor.prototype.load = function (xml, document) {
+	var frag = this.getDOMFromXML(xml, document);
+	this.area_.innerHTML = '';
+	goog.dom.appendChild(this.area_, frag);
+};
+
+/**
+ * Takes an XML string and returns a corresponding DOM structure for the editor area
+ * @param {string} xml The XML string to load
+ * @param {Document=} document The document object to use to create elements
+ */
+takeNote.Editor.prototype.getDOMFromXML = function (xml, document) {
 	document = document || window.document;
 
 	var walker = new takeNote.Walker(
 		this.getDocumentFromXML(xml).firstChild, false);
-	var area = document.createDocumentFragment();
+	var frag = document.createDocumentFragment();
 
 	var open_cnt = null;
-	var open_list = area;
+	var open_list = frag;
 	walker.onblockstart = function (block) {
 		var type = takeNote.Types[block.type];
 		if (!type) {
@@ -123,7 +134,7 @@ takeNote.Editor.prototype.load = function (xml, document) {
 			goog.dom.removeNode(open_list);
 		}
 		open_cnt = null;
-		open_list = parent_list || area;
+		open_list = parent_list || frag;
 	};
 	walker.oninlinestart = function (inline) {
 		var type = takeNote.Types[inline.type];
@@ -136,6 +147,9 @@ takeNote.Editor.prototype.load = function (xml, document) {
 		if (type.className) {
 			node.className = type.className;
 		}
+		Object.keys(inline.attributes).forEach(function (key) {
+			node.setAttribute(key, inline.attributes[key]);
+		});
 		goog.dom.appendChild(open_cnt, node);
 		open_cnt = node;
 	};
@@ -148,8 +162,7 @@ takeNote.Editor.prototype.load = function (xml, document) {
 	};
 	walker.walk();
 
-	this.area_.innerHTML = '';
-	goog.dom.appendChild(this.area_, area);
+	return frag;
 };
 
 /**
@@ -164,7 +177,7 @@ takeNote.Editor.prototype.getDocumentFromXML = function (xml) {
 	} else {
 		doc = new ActiveXObject('Microsoft.XMLDOM');
 	  doc.async = 'false';
-	  doc.loadXML(xml); 
+	  doc.loadXML(xml);
 	}
 	return doc;
 };
