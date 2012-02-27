@@ -135,8 +135,13 @@ takeNote.paste.Cleaner.prototype.cleanAttributes_ = function (elem, attrs) {
 
 	if (act_type.tag_attrs) {
 		var parent = this.getParent_();
-		Object.keys(act_type.tag_attrs).forEach(function (attr) {
-			out_attrs.push(act_type.tag_attrs[attr](parent));
+		Object.keys(act_type.tag_attrs).forEach(function (tag_attr) {
+			var attr = act_type.tag_attrs[tag_attr](parent);
+			
+			// Ignore tag_attr, if attribute with tag_attr name already exists
+			if (out_attrs.every(function (out_attr) { return out_attr[0] !== attr[0]; })) {
+				out_attrs.push(attr);
+			}
 		});
 	}
 	
