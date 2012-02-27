@@ -75,7 +75,28 @@ takeNote.paste.Cleaner.prototype.clean = function (doc, callback) {
  * @return {string} Name of last opened element
  */
 takeNote.paste.Cleaner.prototype.getParent_ = function () {
+	var opened_el = this.opened[this.opened.length - 1];
+	return (opened_el) ? opened_el[0] : undefined;
+}
+
+/**
+ * Get last opened element.
+ * @private
+ * @return {Array.<string, Array.<Array.<string>>>} Last opened element (elem_name, attrs)
+ */
+takeNote.paste.Cleaner.prototype.getEntireParent_ = function () {
 	return this.opened[this.opened.length - 1];
+}
+
+/**
+ * Check out, if given element is opened.
+ * @private
+ * @return {boolean} True if element is opened
+ */
+takeNote.paste.Cleaner.prototype.isElementOpened_ = function (elem) {
+	return this.opened.some(function (op_elem) {
+		return elem === op_elem[0];
+	});
 }
 
 /**
@@ -132,7 +153,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	
 	// Find out, if element is in types
 	if (!act_type) {
-		return this.opened.push(elem);
+		return this.opened.push([elem, attrs]);
 	}
 
 	// Don't open <a> element, if there is not href
@@ -212,7 +233,7 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	
 	// Create tag
 	this.output.push([takeNote.paste.START_TAG, elem, this.cleanAttributes_(elem, attrs)]);
-	this.opened.push(elem);
+	this.opened.push([elem, attrs]);
 	if (act_type.type === 'block') {
 		this.block.push(elem);
 	}
@@ -300,7 +321,7 @@ takeNote.paste.Cleaner.prototype.closeTag_ = function (elem) {
 	}
 	
 	// Find out, if element is opened
-	if (this.opened.indexOf(elem) === -1) {
+	if (!this.isElementOpened_(elem)) {
 		return;
 	}
 	
@@ -308,7 +329,7 @@ takeNote.paste.Cleaner.prototype.closeTag_ = function (elem) {
 	var stop = false;
 	var closing_tag;
 	
-	while ((!stop) && (closing_tag = this.opened.pop())) {
+	while ((!stop) && (closing_tag = this.opened.pop()[0])) {
 		var closing_type = takeNote.paste.Types[closing_tag];
 		
 		// Find out, if element is replacable
