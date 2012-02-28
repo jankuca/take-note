@@ -205,6 +205,12 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 	if (act_type.replace) {
 		return this.openTag_(act_type.replace, attrs);
 	}
+
+	// Find out, if child element has to be ignored
+	var parent_type = takeNote.paste.Types[this.getParent_()];
+	if (parent_type && parent_type.ignoreChildType && parent_type.ignoreChildType(this.getEntireParent_(), this.lastOutput_(), elem)) {
+		return;
+	}
 	
 	// Find out, if parent exists
 	if (this.opened.length > 0) {
