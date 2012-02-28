@@ -159,14 +159,35 @@ takeNote.paste.Types = (function () {
 		},
 		'li': {
 			tag_name: 'text',
-			tag_attrs: {
-			type: function (parent) {
-					return ['list', (parent === 'ol') ? 'number' : 'disc'];
-				}
-			},
 			type: 'list_item',
 			parent_types: ['ul', 'ol'],
-			child_types: ['%flow%']
+			child_types: ['%flow%'],
+			ignored_child_types: ['p', 'div'],
+			tag_attrs: {
+				type: function (parent) {
+						return ['list', (parent === 'ol') ? 'number' : 'disc'];
+					}
+			},
+			attributes: {
+				'data-list': function (value) {
+					return ['list', value];
+				}
+			},
+			ignoreChildType: function (parent, last_output, elem) {
+				if (last_output[1] === 'li') {
+					return true;
+				}
+
+				var parent_attrs = parent[1] || [];
+				var is_data_type = parent_attrs.some(function (attr) {
+					return attr[0] === 'data-type';
+				});
+
+				if (is_data_type && (this.ignored_child_types.indexOf(elem) !== -1)) {
+					return true;
+				}
+				return false;
+			}
 		},
 		
 		'dl': {

@@ -170,6 +170,20 @@ takeNote.paste.Cleaner.prototype.openTag_ = function (elem, attrs) {
 		}
 	}
 
+	// Ignore <li> element if it has data-type attr and hasn't data-list attr (<li data-type=""> => <text>)
+	if (elem === 'li') {
+		var is_data_type = attrs.some(function (attr) {
+			return attr[0] === 'data-type';
+		});
+		var is_data_list = attrs.some( function (attr) {
+			return attr[0] === 'data-list';
+		});
+
+		if (is_data_type && !is_data_list) {
+			return;
+		}
+	}
+
 	// Find out, if element is break line, if it is - close elements until block element is founded and then reopen all closed elements
 	if (act_type.break_line) {
 		// Create empty paragraph, if there is not opened block element
