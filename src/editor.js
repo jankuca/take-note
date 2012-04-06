@@ -102,8 +102,19 @@ takeNote.Editor.prototype.load = function (xml, document) {
 takeNote.Editor.prototype.getDOMFromXML = function (xml, document) {
 	document = document || window.document;
 
-	var walker = new takeNote.Walker(
-		this.getDocumentFromXML(xml).firstChild, false);
+	var xmldoc = this.getDocumentFromXML(xml).firstChild;
+	var frag = this.getDOMFromXMLDocument(xmldoc, document);
+
+	return frag;
+};
+
+/**
+ * Takes an XML document and returns a corresponding DOM structure for the editor area
+ * @param {string} xml The XML string to load
+ * @param {Document=} document The document object to use to create elements
+ */
+takeNote.Editor.prototype.getDOMFromXMLDocument = function (xmldoc, document) {
+	var walker = new takeNote.Walker(xmldoc, false);
 	var frag = document.createDocumentFragment();
 
 	var open_cnt = null;
